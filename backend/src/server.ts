@@ -4,8 +4,10 @@ import { prisma } from './config/db.js';
 import { getRedisClient } from './config/redis.js';
 import { getEmailQueue } from './infrastructure/queue/email-queue.js';
 import { emailService } from './modules/emails/email.service.js';
+import { startEmailWorker } from './workers/email.worker.js';
 
 const PORT = config.port;
+let emailWorkerInstance: any = null;
 
 const server = app.listen(PORT, async () => {
   console.log('====================================================');
@@ -13,6 +15,16 @@ const server = app.listen(PORT, async () => {
   console.log(`📊 Bull Board Queue Monitor: http://localhost:${PORT}/admin/queues`);
   console.log(`🩺 Health check: http://localhost:${PORT}/health`);
   console.log('====================================================');
+
+  // Start background email worker inline (allows 100% free-tier deployment in a single instance)
+  if (process.env.DISABLE_INLINE_WORKER !== 'true') {
+    try {
+      emailWorkerInstance = startEmailWorker();
+      console.log('⚡ Background Email Worker automatically initialized.');
+    } catch (err: any) {
+      console.warn(`[Worker Notice] Inline worker deferred (${err.message}).`);
+    }
+  }
 
   // Reconcile any orphaned/pending jobs that were in progress prior to server restart
   try {
@@ -39,6 +51,9 @@ async function gracefulShutdown(signal: string) {
   console.log(`\n[Shutdown] Received ${signal}. Gracefully closing connections...`);
   server.close(async () => {
     try {
+      if (emailWorkerInstance) {
+        await emailWorkerInstance.close();
+      }
       const queue = getEmailQueue();
       await queue.close();
       const redis = getRedisClient();
