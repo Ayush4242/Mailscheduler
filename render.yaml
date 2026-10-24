@@ -51,14 +51,15 @@ services:
           name: reachinbox-redis
           property: port
 
+  # 3. Managed Redis Service
+  - type: redis
+    name: reachinbox-redis
+    ipAllowList: []
+    plan: free
+
 databases:
   # Managed PostgreSQL Database
   - name: reachinbox-db
     databaseName: reachinbox
-    user: postgres
+    user: reachinbox_user
     plan: free
-
-  # Managed Redis Instance
-  - name: reachinbox-redis
-    plan: free
-    ipAllowList: []
