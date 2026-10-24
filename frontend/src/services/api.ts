@@ -1,6 +1,6 @@
 import { ScheduledEmail, Campaign, User, SlackStatus } from '../types/index.js';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE = ((import.meta as any).env?.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
 export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
