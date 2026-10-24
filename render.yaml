@@ -1,14 +1,12 @@
 services:
-  # 1. Express API Web Service (Runs API + BullMQ Worker inline on 100% Free Plan)
+  # Express API Web Service (Runs API + BullMQ Worker inline on 100% Free Plan)
   - type: web
     name: reachinbox-api
     env: node
     plan: free
     rootDir: backend
-    buildCommand: npm install && npx prisma generate && npm run build
+    buildCommand: npm install && DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate && npm run build
     startCommand: node dist/server.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 5000
